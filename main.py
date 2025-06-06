@@ -644,7 +644,8 @@ async def unsubscribe_all(event):
     msg = ''
     for keywords,channel_name,chat_id in _user_subscribe_list:
       channel_url = get_channel_url(channel_name,chat_id)
-      msg += 'keyword: {}\nchannel: {}\n---\n'.format(keywords,channel_url)
+      msg += f'Keyword: {keywords}\nChannel: {channel_url}\n{"---"*12}\n'
+
 
     re_update = utils.db.user_subscribe_list.update(status = 1 ).where(utils.User_subscribe_list.user_id == user_id)#更新状态
     re_update = re_update.execute()# 更新成功返回1，不管是否重复执行
@@ -908,7 +909,7 @@ async def _list(event):
             channel_username = f'channel username: {channel_name}\n'
 
         channel_url = f'<a href="{channel_url}-1">{"https://t.me/"+channel_name if channel_name else channel_url}</a>'
-        msg += f'id:{sub_id}\n{_type}: {keywords}\n{channel_title}{channel_username}channel url: {channel_url}\n---\n'
+        msg += f'ID: <code>{sub_id}</code>\n{_type.capitalize()}: <code>{keywords}</code>\nChannel: {" ".join([channel_title,channel_username,channel_url]).strip()}\n{"---"*12}\n'
       
       text, entities = html.parse(msg)# 解析超大文本 分批次发送 避免输出报错
       for text, entities in telethon_utils.split_text(text, entities):
