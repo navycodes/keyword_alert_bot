@@ -54,7 +54,25 @@ def js_to_py_re(rx):
   return lambda L: obj(query, L, flags=regex.I if 'i' in params else 0)
 
 def is_regex_str(string):
-  return regex.search(r'^/.*/[a-zA-Z]*?$',string)
+  """
+    正则表达式严格校验
+    :param rule: 输入规则字符串
+    :return: True 如果为合法正则语法
+  """
+  # return regex.search(r'^/.*/[a-zA-Z]*?$',string)
+  try:
+      query, params = string[1:].rsplit('/', 1)
+      if query:
+        regex.compile(query)  # 编译正则表达式
+        return True
+  except:
+      return False
+  
+  return False
+
+def is_regex_str_fuzzy(rule):
+    match = regex.fullmatch(r"^/(.+)/([a-zA-Z]*)$", rule)
+    return bool(match)
 
 @async_lru_cache(maxsize=None)
 async def client_get_entity(entity,_):
@@ -255,7 +273,7 @@ where ({' OR '.join(condition_strs)}) and l.status = 0  order by l.create_time  
               re_update.execute()
             
             chat_title = event_chat_username or event.chat.title
-            if is_regex_str(keywords):# 输入为正则字符串
+            if is_regex_str_fuzzy(keywords):# 输入为正则字符串
               regex_match = js_to_py_re(keywords)(text)# 进行正则匹配 只支持ig两个flag
               if isinstance(regex_match,regex.Match):#search()结果
                 regex_match = [regex_match.group()]
@@ -389,6 +407,9 @@ def parse_full_command(command, keywords, channels):
         [type]: [description]
   """
   keywords_list = keywords.split(',')
+  if is_regex_str(keywords):# 正则字符串
+    keywords_list = [keywords]
+
   channels_list = channels.split(',')
   res = {}
   for keyword in keywords_list:
@@ -868,7 +889,7 @@ async def _list(event):
     if find:
       msg = ''
       for sub_id,keywords,channel_name,chat_id in find:
-        _type = 'regex' if is_regex_str(keywords) else 'keyword'
+        _type = 'regex' if is_regex_str_fuzzy(keywords) else 'keyword'
         channel_url = get_channel_url(channel_name,chat_id)
         
         channel_entity = None # TODO 不执行实体信息读取  否则会无响应
