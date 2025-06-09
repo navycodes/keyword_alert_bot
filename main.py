@@ -71,8 +71,9 @@ def is_regex_str(string):
   return False
 
 def is_regex_str_fuzzy(rule):
-    match = regex.fullmatch(r"^/(.+)/([a-zA-Z]*)$", rule)
-    return bool(match)
+  return is_regex_str(rule)
+  # match = regex.fullmatch(r"^/(.+)/([a-zA-Z]*)$", rule)
+  # return bool(match)
 
 @async_lru_cache(maxsize=None)
 async def client_get_entity(entity,_):
@@ -623,8 +624,8 @@ async def subscribe(event):
   splitd = [i for i in regex.split(r'\s+',text) if i]# 删除空元素
   if len(splitd) <= 1:
     msg = "输入需要订阅的关键字,支持js正则语法：\n`/[\s\S]*/ig`\n\nInput the keyword that needs to subscribe, support JS regular syntax：\n`/[\s\S]*/ig`"
-    text, entities = markdown.parse(msg)
-    await event.respond(text,formatting_entities=entities)
+    _text, entities = markdown.parse(msg)
+    await event.respond(_text,formatting_entities=entities)
     cache.set('status_{}'.format(chat_id),{'current_status':'/subscribe keywords','record_value':text},expire=5*60)#设置5m后过期
   elif len(splitd)  == 3:
     command, keywords, channels = splitd
